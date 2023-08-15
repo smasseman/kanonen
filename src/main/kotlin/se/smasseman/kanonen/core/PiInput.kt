@@ -8,10 +8,10 @@ class PiInput(name: InputName, val input: DigitalInput) : Input(name) {
     init {
         input.addListener(DigitalStateChangeListener { event ->
             state = when (event.state()) {
-                DigitalState.LOW -> InputState.OFF
-                DigitalState.UNKNOWN -> InputState.ON
-                DigitalState.HIGH -> InputState.ON
-                null -> InputState.ON
+                DigitalState.LOW -> InputState.ON
+                DigitalState.UNKNOWN -> InputState.OFF
+                DigitalState.HIGH -> InputState.OFF
+                null -> InputState.OFF
             }
         })
     }
