@@ -2,11 +2,7 @@ package se.smasseman.kanonen.core
 
 import com.pi4j.Pi4J
 import com.pi4j.context.Context
-import com.pi4j.io.gpio.digital.DigitalInputProvider
-import com.pi4j.io.gpio.digital.DigitalOutput
-import com.pi4j.io.gpio.digital.DigitalOutputProvider
-import com.pi4j.io.gpio.digital.DigitalState
-import com.pi4j.platform.Platform
+import com.pi4j.io.gpio.digital.*
 import com.pi4j.plugin.mock.platform.MockPlatform
 import com.pi4j.plugin.mock.provider.gpio.digital.MockDigitalInputProvider
 import com.pi4j.plugin.mock.provider.gpio.digital.MockDigitalOutputProvider
@@ -34,31 +30,32 @@ class PiContext : LogUtil {
         fun createOutput(address: Int, name: String): PiOutput {
             //val output = pi4j.digitalOutput<DigitalOutputProvider>().create<DigitalOutput>(address, name, name)
 
-            val ledConfig = DigitalOutput.newConfigBuilder(pi4j)
+            val config = DigitalOutput.newConfigBuilder(pi4j)
                 .id(name)
                 .name(name)
                 .address(address)
                 .shutdown(DigitalState.HIGH)
                 .initial(DigitalState.HIGH)
                 .provider("pigpio-digital-output")
-                //.provider("raspberrypi-digital-output") // Inget händer. funkar inte
 
-            logger().info("Providers:")
-            pi4j.providers().all.forEach {
-                logger().info(it.toString())
-            }
-
-            val led = pi4j.create(ledConfig);
-            logger().info("Created $led with provider ${led.provider()}")
-            return PiOutput(
-                led
-            )
+            val piOutput = pi4j.create(config);
+            logger().info("Created $piOutput with provider ${piOutput.provider()}")
+            return PiOutput(piOutput)
         }
 
-        fun createInput(address: Int, name: InputName): PiInput = PiInput(
-            name,
-            pi4j.digitalInput<DigitalInputProvider>().create(address, name.name, name.name)
-        )
+        fun createInput(address: Int, name: InputName): PiInput {
+            //val input = pi4j.digitalInput<DigitalInputProvider>().create<DigitalInput>(address, name.name, name.name)
+            val config = DigitalInput.newConfigBuilder(pi4j)
+                .id(name.name)
+                .name(name.name)
+                .address(address)
+                .pull(PullResistance.PULL_UP)
+                .provider("pigpio-digital-input")
+
+            val piInput = pi4j.create(config)
+            logger().info("Created $piInput with provider ${piInput.provider()}")
+            return PiInput(name, piInput)
+        }
 
     }
 
