@@ -66,7 +66,8 @@ object KanonenState {
 }
 
 fun main() {
-    embeddedServer(Netty, port = 7070, host = "0.0.0.0", module = Application::module)
+    val port = System.getProperty("port", "7070").toInt()
+    embeddedServer(Netty, port = port, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 
