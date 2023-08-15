@@ -38,8 +38,8 @@ class PiContext : LogUtil {
                 .id(name)
                 .name(name)
                 .address(address)
-                .shutdown(DigitalState.LOW)
-                .initial(DigitalState.LOW)
+                .shutdown(DigitalState.HIGH)
+                .initial(DigitalState.HIGH)
                 .provider("pigpio-digital-output")
                 //.provider("raspberrypi-digital-output") // Inget händer. funkar inte
 

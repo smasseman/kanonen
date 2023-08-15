@@ -9,8 +9,8 @@ class PiOutput(private val output: DigitalOutput) : Output, LogUtil {
     override fun set(state: OutputState) {
         output.state(
             when (state) {
-                OutputState.ON -> DigitalState.HIGH
-                OutputState.OFF -> DigitalState.LOW
+                OutputState.ON -> DigitalState.LOW
+                OutputState.OFF -> DigitalState.HIGH
             }
         )
         logger().info("$output is now ${output.state()}")
@@ -19,9 +19,9 @@ class PiOutput(private val output: DigitalOutput) : Output, LogUtil {
     override fun get(): AnyOutputState {
         val state = output.state()
         return when (state) {
-            DigitalState.HIGH -> OutputState.ON
+            DigitalState.HIGH -> OutputState.OFF
             DigitalState.UNKNOWN -> AnyOutputState.UNKNOWN
-            DigitalState.LOW -> OutputState.OFF
+            DigitalState.LOW -> OutputState.ON
             null -> AnyOutputState.UNKNOWN
         }
     }
