@@ -1,0 +1,20 @@
+body {
+  background-color: lightgray;
+}
+
+table, td, th {
+  border: solid black 1px;
+}
+#editlink {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+#editlink a {
+  text-decoration: none;
+  font-size: 200%;
+}
+#outputcontainer {
+  position: absolute;
+  left: 0;
+}

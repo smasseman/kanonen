@@ -1,0 +1,171 @@
+<html>
+<head>
+  <title>Kanonen</title></head>
+<link rel="stylesheet" href="style.css">
+<body>
+
+<div id="outputs">
+</div>
+<div id="inputs">
+</div>
+
+<div id="editlink">
+  <a href="edit.html">⚙️</a>
+</div>
+
+<div id="sequenceNames">
+</div>
+
+<div id="executedLines">
+</div>
+
+</body>
+
+<script>
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', '/sequencenames');
+  xhr.send();
+  xhr.onload = function () {
+    if (xhr.status !== 200) { // analyze HTTP status of the response
+      alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+    } else { // show the result
+      let jsonObject = JSON.parse(xhr.response);
+      onSequenceNames(jsonObject);
+    }
+  };
+  xhr.onerror = function () {
+    alert("Request failed");
+  };
+
+  webSocket = new WebSocket(`ws://${location.host}/ws`);
+
+  function outputToEmoji(output) {
+    console.log("Output: " + output);
+    if (output === "ON") {
+      return "✅";
+    } else if (output === "OFF") {
+      return "☑️";
+    } else if (output === "UNKNOWN") {
+      return "❓";
+    } else {
+      return output;
+    }
+  }
+
+  function addLineLog(text) {
+    let diff = [...timeDiff.tick()];
+    const h = `
+<span style="display: inline-block; width: 50px">
+  ${diff[0]}
+</span>
+<span style="display: inline-block; width: 50px">
+  ${diff[1]}
+</span>
+<span>
+  ${text}
+</span>
+<br>`;
+    document.getElementById("executedLines").innerHTML += h;
+  }
+
+  webSocket.onmessage = (eventObject) => {
+    const event = JSON.parse(eventObject.data);
+    if (event.type === "CONNECTED") {
+      console.log("Websocket connected");
+      console.log("State: " + eventObject.data);
+      {
+        const outputs = event.outputs;
+        let names = Object.keys(outputs);
+        let html = "";
+        names.forEach((name) => {
+          const value = outputToEmoji(outputs[name]);
+          html += `
+        <span>${name}: <span id="output_value_${name}">${value}</span></span><br/>
+        `;
+        });
+        document.getElementById("outputs").innerHTML = html;
+      }
+      {
+        const inputs = event.inputs;
+        let names = Object.keys(inputs);
+        let html = "";
+        names.forEach((name) => {
+          const value = outputToEmoji(inputs[name]);
+          html += `
+        <span>${name}: <span id="input_value_${name}">${value}</span></span><br/>
+        `;
+        });
+        document.getElementById("inputs").innerHTML = html;
+      }
+
+    } else if (event.type === "SEQUENCE_DONE") {
+      addLineLog("DONE");
+
+    } else if (event.type === "ERROR") {
+      alert(`Sequence failed with message ${event.message}`);
+
+    } else if (event.type === "OUTPUT_STATE") {
+      const id = `output_value_${event.outputName}`;
+      document.getElementById(id).innerText = outputToEmoji(event.state);
+
+    } else if (event.type === "INPUT_STATE") {
+      const id = `input_value_${event.inputName}`;
+      document.getElementById(id).innerText = outputToEmoji(event.state);
+
+    } else if (event.type === "EXECUTE") {
+      addLineLog(event.raw)
+
+    } else {
+      console.log(`Unknown event type: ${event.type}`);
+    }
+  };
+
+  let timeDiff = undefined;
+
+  class TimeDiff {
+    constructor() {
+      this.ts = new Date().getTime();
+      this.created = this.ts;
+    }
+
+    * tick() {
+      const diff = new Date().getTime() - this.ts;
+      this.ts = new Date().getTime();
+      yield diff;
+      yield this.ts - this.created;
+    }
+
+  }
+
+  function clearStuff() {
+    document.getElementById("executedLines").innerText = "";
+    timeDiff = new TimeDiff();
+  }
+
+  function onSequenceNames(names) {
+    names.forEach((name) => {
+      const outer = document.getElementById("sequenceNames");
+      const btn = Object.assign(document.createElement('button'), {
+        className: 'check',
+        foo: 'bar',
+        innerHTML: name
+      })
+      btn.setAttribute("onclick", `runSequence('${name}')`);
+      outer.append(btn);
+    });
+  }
+
+  function runSequence(name) {
+    console.log("Run sequence: " + name);
+    clearStuff();
+
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', `/run/${name}`);
+    xhr.send();
+    xhr.onerror = function () {
+      alert("Failed to start sequence " + name);
+    };
+
+  }
+</script>
+</html>

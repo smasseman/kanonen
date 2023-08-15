@@ -1,0 +1,154 @@
+<html>
+<head>
+</head>
+<body>
+<a href="index.html">Back to run mode.</a><br>
+Public address is: <span id="ipaddress"></span>
+<br>
+<a href="help.html">Help</a>
+<br>
+New sequence name: <input id="newName">
+<button onclick="newSequence()">Create</button><br>
+<br>
+<button onclick="validateSequences()">Validate saved sequences</button>
+<div id="sequences"></div>
+</body>
+
+<script>
+
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', '/sequencenames');
+  xhr.send();
+  xhr.onload = function () {
+    if (xhr.status !== 200) { // analyze HTTP status of the response
+      alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+    } else { // show the result
+      let jsonObject = JSON.parse(xhr.response);
+      onSequenceNames(jsonObject);
+    }
+  };
+  xhr.onerror = function () {
+    alert("Request failed");
+  };
+
+  function onSequenceNames(names) {
+    names.forEach((name, i) => {
+      console.log("Append " + name);
+      const outer = document.getElementById("sequences");
+      outer.innerHTML += `<hr><b>${name}</b><br>`;
+      const div = Object.assign(document.createElement('textarea'), {
+        id: "sequence_" + name
+      })
+      outer.append(div);
+      const saveBtn = Object.assign(document.createElement('button'));
+      saveBtn.setAttribute("onclick", `save('${name}')`);
+      saveBtn.innerText = `Save ${name}`;
+      outer.append(saveBtn);
+      const deleteBtn = Object.assign(document.createElement('button'));
+      deleteBtn.setAttribute("onclick", `deleteSequence('${name}')`);
+      deleteBtn.innerText = `Delete ${name}`;
+      outer.append(deleteBtn);
+      loadSequence(name);
+    });
+  }
+
+  function save(name) {
+    const code = document.getElementById("sequence_" + name).value;
+    console.log("Code: " + code);
+    fetch('/sequence/' + name, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({code: code}),
+    }).then(response => {
+      if (response.status !== 200) {
+        alert("Error: " + response.status + ":" + response.statusText);
+      }
+    });
+  }
+
+  function doFetch(method, url, body) {
+    return fetch(url, {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined
+    }).then(response => {
+      if (response.status !== 200) {
+        return response.text().then(
+            text => {
+              alert("Error: " + response.status + ":" + response.statusText + ":" + text);
+            })
+      } else {
+        return Promise.resolve(response);
+      }
+    });
+  }
+
+  function deleteSequence(name) {
+    if (confirm("Really delete " + name)) {
+      doFetch("DELETE", "/sequence/" + name, "").then(x => {
+        location.reload();
+      });
+    }
+  }
+
+  function newSequence() {
+    const name = document.getElementById("newName").value;
+    doFetch("POST", "/sequence/" + name, "").then(x => {
+      if (x !== undefined) {
+        console.log(JSON.stringify(x, null, 2));
+        location.reload();
+      }
+    });
+  }
+
+  function validateSequences() {
+    doFetch("GET", "/validate/sequences")
+    .then(x => {
+      console.log("x: " + x);
+      if( x.ok ) {
+        alert("Validation OK");
+      }
+    })
+  }
+
+  doFetch("GET", "/ip")
+  .then(x => {
+    if( x.ok ) {
+      x.text().then(text => {
+        const ref = `http://${text}:7070`;
+        const html = `<a href="${ref}">${ref}</a>`;
+        document.getElementById("ipaddress").innerHTML = html;
+      })
+    }
+  })
+
+  function onSequence(sequence) {
+    const div = document.getElementById("sequence_" + sequence.name);
+    div.setAttribute("rows", sequence.lines.length + 1);
+    sequence.lines.forEach((line) => {
+      div.value += (line.raw + "\r\n");
+    });
+  }
+
+  function loadSequence(name) {
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', '/sequence/' + name);
+    xhr.send();
+    xhr.onload = function () {
+      if (xhr.status !== 200) { // analyze HTTP status of the response
+        alert(`Error ${xhr.status}: ${xhr.statusText}`); // e.g. 404: Not Found
+      } else { // show the result
+        let jsonObject = JSON.parse(xhr.response);
+        onSequence(jsonObject);
+      }
+    };
+    xhr.onerror = function () {
+      alert("Request failed");
+    };
+  }
+</script>
+</html>

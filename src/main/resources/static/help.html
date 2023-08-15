@@ -1,0 +1,83 @@
+<html>
+<head>
+  <title>Kanonen</title></head>
+<link rel="stylesheet" href="style.css">
+<body>
+<a href="edit.html">Till edit.</a>
+<br>
+
+I exemplen nedan är FOO namnet på en output och BAR är namnet på en input.
+
+<h1>Kommandon</h1>
+<table>
+  <tr>
+    <th>
+      Namn
+    </th>
+    <th>
+      Beskrivning
+    </th>
+    <th>
+      Exempel
+    </th>
+  </tr>
+  <tr>
+    <td>SET</td>
+    <td>Sätter output till hög eller låg. Tex för att slå av eller på ett relä.</td>
+    <td>SET FOO ON<br>SET FOO OFF</td>
+  </tr>
+  <tr>
+    <td>WAITFOR</td>
+    <td>Väntar tills en input är i förväntat tillstånd. Avbryter körningen om inte tillståndet är uppfyllt inom x antal millisekunder.</td>
+    <td><nobr>WAITFOR BAR ON 2000</nobr></td>
+  </tr>
+  <tr>
+    <td>EXPECT</td>
+    <td>Avbryter körningen om inte en output är i förväntat tillstånd.</td>
+    <td><nobr>EXPECT BAR ON</nobr></td>
+  </tr>
+  <tr>
+    <td>CALL</td>
+    <td>Startar en annan sekvens vid angivel label. När den andra seqvensen tar slut så återupptas nuvarande sekvens</td>
+    <td><nobr>CALL SEQ1 LABEL1</nobr></td>
+  </tr>
+  <tr>
+    <td>WAIT</td>
+    <td>Ta en paus i angivet antal millisekunder.</td>
+    <td><nobr>WAIT 500</nobr></td>
+  </tr>
+  <tr>
+    <td>LABEL</td>
+    <td>En markering i en seqvens dit andra sekvenser kan hoppa</td>
+    <td><nobr>LABEL LABEL1</nobr></td>
+  </tr>
+
+</table>
+
+<h1>Exempel sekvenser</h1>
+Nedan finns 2 sekvenser, kallade SEQ_1 och SEQ_2. När sekvens 1 startas så händer följande.
+
+<li>Vi börjar med att förvänta oss att output FOO ska vara på, annars avbryts körningen direkt.</li>
+<li>Sen sätter den FOO till av.</li>
+<li>Väntar en halv sekund</li>
+<li>Hoppa till label START i sekvens SEQ_2</li>
+<li>Sekvens 2 väntar tills mikrobryten som sitter på input BAR blir sluten. Om det inte inträffar inom en sekund så avbryts all körning.</li>
+<li>Sen är sekvens 2 slut och då återupptar sekvens 1 där den hoppade iväg.</li>
+<li>Sekvens 1 sätter nu FOO ON igen</li>
+<li>Inga fler instruktioner finns och körningen är klar.</li>
+<br><br>
+<b>SEQ_1</b>
+<pre>
+  EXPECT FOO ON
+  SET FOO OFF
+  WAIT 500
+  CALL SEQ_2 START
+  SET FOO ON
+</pre>
+
+<b>SEQ_2</b>
+<pre>
+  LABEL START
+  WAITFOR BAR ON 1000
+</pre>
+

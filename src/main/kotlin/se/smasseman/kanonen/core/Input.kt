@@ -1,0 +1,22 @@
+package se.smasseman.kanonen.core
+
+import java.util.LinkedList
+
+open class Input(val name: InputName) {
+
+    private val listeners = LinkedList<InputListener>()
+    var state : InputState = InputState.ON
+        protected set(newState) {
+            field = newState
+            listeners.forEach { it.inputUpdated(name, newState) }
+        }
+
+    fun addListener(listener: InputListener) {
+        listeners.add(listener)
+    }
+
+}
+
+fun interface InputListener {
+    fun inputUpdated(inputName: InputName, inputState: InputState)
+}
