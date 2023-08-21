@@ -119,7 +119,7 @@ New sequence name: <input id="newName">
   .then(x => {
     if( x.ok ) {
       x.text().then(text => {
-        const ref = `http://${text}:7070`;
+        const ref = `http://${text}`;
         const html = `<a href="${ref}">${ref}</a>`;
         document.getElementById("ipaddress").innerHTML = html;
       })

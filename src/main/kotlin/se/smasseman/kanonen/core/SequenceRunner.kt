@@ -29,7 +29,6 @@ class SequenceRunner(
         while (iter.hasNext() && !Thread.interrupted()) {
             val line = iter.next()
             val action = line.action
-            println("Execute $sequenceName ${line.lineNumber} $action")
             try {
                 executionListeners.forEach { it.execute(line) }
                 when (action) {
@@ -46,7 +45,7 @@ class SequenceRunner(
                     is WaitAction -> executeWait(action)
                 }
             } catch (e: InterruptedException) {
-                println("Interrupted")
+                log.info("Interrupted")
                 Thread.currentThread().interrupt()
             } catch (e: RuntimeException) {
                 val error = ExecutionError(line, e.message ?: "")
