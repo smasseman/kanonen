@@ -39,7 +39,7 @@ fun Application.configureSockets(
         .addOutputListener { outputName, outputState ->
             send(OutputStateEvent(outputName.name, outputState.toString()))
         }
-        .addExecutionListener { line -> send(ExecutionEvent.from(line)) }
+        //.addExecutionListener { line -> send(ExecutionEvent.from(line)) }
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(15)
         timeout = Duration.ofSeconds(15)
