@@ -1,7 +1,5 @@
 package se.smasseman.kanonen.core
 
-import se.smasseman.kanonen.web.KanonenState
-
 interface SequenceProvider {
 
     fun get(): List<Sequence>

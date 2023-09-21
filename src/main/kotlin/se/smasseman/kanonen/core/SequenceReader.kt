@@ -2,8 +2,6 @@ package se.smasseman.kanonen.core
 
 import java.io.File
 import java.io.FileNotFoundException
-import java.lang.IllegalArgumentException
-import java.lang.RuntimeException
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.time.Duration
@@ -12,7 +10,7 @@ import java.util.*
 class SequenceReader(private val directory: File) : LogUtil {
 
     init {
-        if (!directory.isDirectory) {
+        require (directory.isDirectory) {
             throw IllegalArgumentException("$directory is not a directory")
         }
     }
@@ -21,7 +19,7 @@ class SequenceReader(private val directory: File) : LogUtil {
         return readDirectory(directory)
     }
 
-    fun readDirectory(directory: File): List<Sequence> {
+    private fun readDirectory(directory: File): List<Sequence> {
         logger().info("Read sequences in $directory")
         return (directory.listFiles()
             ?: throw RuntimeException("Could not list files in directory $directory"))
@@ -42,8 +40,9 @@ class SequenceReader(private val directory: File) : LogUtil {
             logger().info("Load sequence $name")
             val scanner = Scanner(input)
 
-            val sequenceLines = LinkedList<SequenceLine>()
-            var actionFlag = false
+            val propertyLines = LinkedList<SequencePropertyLine>()
+            val actionLines = LinkedList<SequenceActionLine>()
+            var actionFlag = !input.contains("---")
             var lineNumber = 0
             while (scanner.hasNext()) {
                 lineNumber++
@@ -54,13 +53,19 @@ class SequenceReader(private val directory: File) : LogUtil {
                         // Ignore comment
                     } else if (line.isBlank()) {
                         // Ignore blank line
+                    } else if (line.contains("---")) {
+                        actionFlag = true;
                     } else {
-                        if (!line.contains(":")) actionFlag = true;
                         if (actionFlag) {
                             val action = parseAction(line)
-                            val sequenceLine = SequenceLine(name, lineNumber, action, line)
+                            val sequenceLine = SequenceActionLine(name, lineNumber, action, line)
                             logger().debug("SequenceLine: $sequenceLine")
-                            sequenceLines.add(sequenceLine)
+                            actionLines.add(sequenceLine)
+                        } else {
+                            val property = parseProperty(line)
+                            val sequenceLine = SequencePropertyLine(name, lineNumber, property, line)
+                            logger().debug("SequenceLine: $sequenceLine")
+                            propertyLines.add(sequenceLine)
                         }
                     }
                 } catch (e: Exception) {
@@ -68,7 +73,18 @@ class SequenceReader(private val directory: File) : LogUtil {
                         .initCause(e)
                 }
             }
-            return Sequence(name, mapOf(), sequenceLines)
+            return Sequence(name, propertyLines, actionLines)
+        }
+
+        private fun parseProperty(line: String): Property {
+            if (line.startsWith("TRIGGER")) {
+                //TRIGGER G3 OFF
+                val scanner = Scanner(line).useDelimiter(" ")
+                scanner.next()
+                return TriggerProperty(InputName(scanner.next()), InputState.valueOf(scanner.next()))
+            } else {
+                throw RuntimeException("Invalid property " + line);
+            }
         }
 
         fun parseAction(line: String): Action {

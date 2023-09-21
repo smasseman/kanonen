@@ -1,8 +1,7 @@
 package se.smasseman.kanonen.core
 
 import org.slf4j.LoggerFactory
-import java.awt.Label
-import java.util.LinkedList
+import java.util.*
 
 class SequenceRunner(
     private val outputs: Map<OutputName, Output>,
@@ -18,14 +17,14 @@ class SequenceRunner(
     private val doneListeners = LinkedList<DoneListener>()
 
     fun run(sequenceName: SequenceName) {
-        run(sequences.get(sequenceName).lines[0])
+        run(sequences.get(sequenceName).actionLines[0])
     }
 
-    private fun run(input: SequenceLine) {
+    private fun run(input: SequenceActionLine) {
         val sequenceName = input.sequenceName
         val sequence = sequences.get(sequenceName)
         val iter = getIterator(input, sequence)
-        log.info("Going to run ${sequence.lines.size} lines in ${sequence.name}")
+        log.info("Going to run ${sequence.actionLines.size} lines in ${sequence.name}")
         while (iter.hasNext() && !Thread.interrupted()) {
             val line = iter.next()
             val action = line.action
@@ -74,9 +73,9 @@ class SequenceRunner(
         throw RuntimeException("Input ${action.inputName} is still not ${action.value} after ${action.duration.toMillis()} milliseconds.")
     }
 
-    private fun getIterator(input: SequenceLine, sequence: Sequence): Iterator<SequenceLine> {
-        val iter1 = sequence.lines.iterator()
-        val iter2 = sequence.lines.iterator()
+    private fun getIterator(input: SequenceActionLine, sequence: Sequence): Iterator<SequenceActionLine> {
+        val iter1 = sequence.actionLines.iterator()
+        val iter2 = sequence.actionLines.iterator()
         while (iter1.next() != input) {
             iter2.next()
         }
@@ -88,7 +87,7 @@ class SequenceRunner(
     private fun run(sequenceName: SequenceName, labelName: String, action: Action) {
         val sequence = sequences.get(sequenceName)
         val line =
-            sequence.lines.find { it.action is LabelAction && it.action.labelName == labelName }
+            sequence.actionLines.find { it.action is LabelAction && it.action.labelName == labelName }
                 ?: throw RuntimeException("Can not $action because there is no such label in $sequenceName")
         run(line)
     }

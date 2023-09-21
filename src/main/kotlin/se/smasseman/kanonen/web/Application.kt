@@ -3,31 +3,35 @@ package se.smasseman.kanonen.web
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import se.smasseman.kanonen.core.SequenceReader
+import se.smasseman.kanonen.core.*
 import se.smasseman.kanonen.web.plugins.configureRouting
 import se.smasseman.kanonen.web.plugins.configureSerialization
 import se.smasseman.kanonen.web.plugins.configureSockets
-import se.smasseman.kanonen.core.*
 import java.io.File
 
 object KanonenState {
 
     val pinConfig = PinConfig()
+    val triggerHandler : TriggerHandler
     private var reader: SequenceReader =
         SequenceReader(
             File(
                 System.getProperty(
                     "sequences",
-                    "/Users/jorgensmas/git/smasseman/ktor-sample/sequences"
+                    "/Users/jorgensmas/git/smasseman/kanonen/sequences"
                 )
             )
         )
 
     val runner: SequenceRunner
-    var sequences: List<Sequence>
+    var sequences: List<Sequence> = listOf()
+        set(s) {
+            field = s
+            triggerHandler.update(s)
+        }
+
 
     init {
-        sequences = reader.readDirectory()
         val sequenceProvider = object : SequenceProvider {
             override fun get(): List<Sequence> {
                 return sequences
@@ -35,6 +39,8 @@ object KanonenState {
         }
         runner =
             SequenceRunner(pinConfig.outputs, pinConfig.inputs, sequenceProvider)
+        triggerHandler = TriggerHandler(runner, pinConfig.inputs)
+        sequences = reader.readDirectory()
     }
 
     fun runSequence(sequenceName: SequenceName) {

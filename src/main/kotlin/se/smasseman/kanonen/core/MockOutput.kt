@@ -1,7 +1,6 @@
 package se.smasseman.kanonen.core
 
-import org.slf4j.LoggerFactory;
-import java.util.LinkedList
+import org.slf4j.LoggerFactory
 
 class MockOutput(val name: OutputName) : Output {
 

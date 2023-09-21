@@ -5,14 +5,15 @@ import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.newFixedThreadPoolContext
 import org.slf4j.LoggerFactory
 import se.smasseman.kanonen.core.*
 import java.time.Duration
 import java.util.*
-import kotlin.collections.HashMap
 
+@OptIn(DelicateCoroutinesApi::class)
 fun Application.configureSockets(
     runner: SequenceRunner,
     outputs: Collection<Output>,
@@ -94,7 +95,7 @@ class InputStateEvent(val inputName: String, val state: String) :
 
 class ExecutionEvent(val raw: String) : WebSocketEvent(WebSocketEventType.EXECUTE) {
     companion object {
-        fun from(line: SequenceLine): ExecutionEvent = ExecutionEvent(line.raw)
+        fun from(line: SequenceActionLine): ExecutionEvent = ExecutionEvent(line.raw)
     }
 
     override fun toString() = this.javaClass.simpleName + "[" + raw + "]"

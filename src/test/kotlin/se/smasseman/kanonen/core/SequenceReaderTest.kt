@@ -2,7 +2,6 @@ package se.smasseman.kanonen.core
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import java.io.File
 import java.time.Duration
 
 
@@ -52,11 +51,29 @@ class SequenceReaderTest {
             SET DVAB OFF
         """.trimIndent()
         )
-        assertThat(sequence.lines).hasSize(2)
+        assertThat(sequence.actionLines).hasSize(2)
+    }
+
+    @Test
+    fun `read sequense with trigger`() {
+        val sequence: Sequence = read(
+            """
+            TRIGGER G3 ON
+            ---
+            SET DVAB ON
+            SET DVAB OFF
+        """.trimIndent()
+        )
+        assertThat(sequence.actionLines).hasSize(2)
+        assertThat(sequence.propertyLines).hasSize(1)
+        val property = sequence.propertyLines[0].property
+        val triggerProperty = property as TriggerProperty
+        assertThat(triggerProperty.input.name).isEqualTo("G3");
+
     }
 
     private fun assertAction(expected: Action, code: String) {
-        val read = read(code).lines.get(0).action
+        val read = read(code).actionLines.get(0).action
         assertThat(read).isEqualTo(expected)
     }
 

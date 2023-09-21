@@ -9,9 +9,6 @@ import io.ktor.server.routing.*
 import io.ktor.server.webjars.*
 import se.smasseman.kanonen.util.NetworkUtil
 import java.io.File
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.util.regex.Pattern
 
 fun Application.configureRouting() {
     install(Webjars) {
@@ -38,7 +35,7 @@ fun Application.configureRouting() {
                 File(
                     System.getProperty(
                         "staticfiles",
-                        "/Users/jorgensmas/git/smasseman/ktor-sample/src/main/resources/static"
+                        "/Users/jorgensmas/git/smasseman/kanonen/src/main/resources/static"
                     )
                 ),
                 call.parameters["file"].toString()

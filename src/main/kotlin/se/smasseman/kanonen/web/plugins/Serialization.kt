@@ -1,18 +1,18 @@
 package se.smasseman.kanonen.web.plugins
 
-import io.ktor.serialization.jackson.*
-import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.databind.SerializationFeature
 import io.ktor.http.*
-import io.ktor.server.response.*
-import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
-import se.smasseman.kanonen.web.KanonenState
 import se.smasseman.kanonen.core.*
+import se.smasseman.kanonen.web.KanonenState
 
-fun Application.configureSerialization(KanonenState: KanonenState) {
+fun Application.configureSerialization(kanonenState: KanonenState) {
     install(ContentNegotiation) {
         jackson {
             enable(SerializationFeature.INDENT_OUTPUT)
@@ -23,22 +23,22 @@ fun Application.configureSerialization(KanonenState: KanonenState) {
             call.respond(mapOf("hello" to "world"))
         }
         get("/run/{name}") {
-            KanonenState.runSequence(SequenceName(call.parameters["name"].toString()))
+            kanonenState.runSequence(SequenceName(call.parameters["name"].toString()))
             call.respondText(text = "ok")
         }
         get("/sequencenames") {
-            call.respond(KanonenState.sequences.map { it.name.name })
+            call.respond(kanonenState.sequences.map { it.name.name })
         }
         get("/validate/sequences") {
             try {
-                KanonenState.validateSequences()
+                kanonenState.validateSequences()
                 call.respond("ok")
             } catch (e: ValidationFailedException) {
                 call.respondText(text = e.message, status = HttpStatusCode.Conflict)
             }
         }
         get("/sequence/{name}") {
-            val sequence = KanonenState.sequences.filter { it.name.name == call.parameters["name"] }
+            val sequence = kanonenState.sequences.filter { it.name.name == call.parameters["name"] }
                 .firstOrNull()
             if (sequence == null) {
                 call.respondText(text = "", status = HttpStatusCode.NoContent)
@@ -50,7 +50,7 @@ fun Application.configureSerialization(KanonenState: KanonenState) {
             val body = call.receive(SequenceUpdate::class);
             val sequenceName = SequenceName(call.parameters["name"].toString());
             try {
-                KanonenState.updateSequence(sequenceName, body.code)
+                kanonenState.updateSequence(sequenceName, body.code)
                 call.respond("{}")
             } catch (e: SequenceSyntaxErrorException) {
                 LoggerFactory.getLogger(this::class.java).warn(e.message, e)
@@ -60,7 +60,7 @@ fun Application.configureSerialization(KanonenState: KanonenState) {
         delete("/sequence/{name}") {
             val sequenceName = SequenceName(call.parameters["name"].toString());
             try {
-                KanonenState.deleteSequence(sequenceName)
+                kanonenState.deleteSequence(sequenceName)
                 call.respond("{}")
             } catch (e: SequenceSyntaxErrorException) {
                 LoggerFactory.getLogger(this::class.java).warn(e.message, e)
@@ -69,7 +69,7 @@ fun Application.configureSerialization(KanonenState: KanonenState) {
         }
         post("/sequence/{name}") {
             val sequenceName = SequenceName(call.parameters["name"].toString());
-            KanonenState.newSequence(sequenceName)
+            kanonenState.newSequence(sequenceName)
             call.respond("{}")
         }
     }
@@ -81,14 +81,14 @@ data class SequenceDto(val name: String, val lines: List<LineDto>) {
     companion object {
         fun toDto(sequence: Sequence): SequenceDto = SequenceDto(
             sequence.name.name,
-            sequence.lines.map { LineDto.toDto(it) }.toList()
+            sequence.actionLines.map { LineDto.toDto(it) }.toList()
         )
     }
 }
 
 data class LineDto(val lineNumber: Int, val raw: String) {
     companion object {
-        fun toDto(line: SequenceLine): LineDto = LineDto(
+        fun toDto(line: SequenceActionLine): LineDto = LineDto(
             line.lineNumber,
             line.raw
         )

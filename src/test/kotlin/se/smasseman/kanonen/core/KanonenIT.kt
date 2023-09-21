@@ -1,13 +1,7 @@
 package se.smasseman.kanonen.core
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.newFixedThreadPoolContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import se.smasseman.kanonen.web.KanonenState
-import java.io.File
 import java.lang.RuntimeException
 import java.time.Duration
 import java.time.LocalDate
@@ -218,9 +212,9 @@ class KanonenIT {
 
 class MyExecutionListener : ExecutionListener {
 
-    val lines = LinkedList<SequenceLine>()
+    val lines = LinkedList<SequenceActionLine>()
 
-    override fun execute(line: SequenceLine) {
+    override fun execute(line: SequenceActionLine) {
         lines.add(line)
     }
 }

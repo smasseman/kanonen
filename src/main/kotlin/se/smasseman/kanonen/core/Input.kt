@@ -1,6 +1,6 @@
 package se.smasseman.kanonen.core
 
-import java.util.LinkedList
+import java.util.*
 
 open class Input(val name: InputName) {
 
@@ -13,6 +13,10 @@ open class Input(val name: InputName) {
 
     fun addListener(listener: InputListener) {
         listeners.add(listener)
+    }
+
+    fun removeListener(listener: InputListener) {
+        listeners.remove(listener)
     }
 
 }
