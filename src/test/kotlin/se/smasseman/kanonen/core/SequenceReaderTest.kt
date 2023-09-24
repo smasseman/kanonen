@@ -2,10 +2,38 @@ package se.smasseman.kanonen.core
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import java.io.File
 import java.time.Duration
+import java.util.*
 
 
 class SequenceReaderTest {
+
+    @Test
+    fun readWrite() {
+        val directory : File = File.createTempFile("foo", "bar").let {
+            it.delete()
+            File(it.parent, "SequenceReaderTest" + UUID.randomUUID())
+        }
+        directory.mkdir()
+
+        val reader = SequenceReader(directory)
+
+        val name = SequenceName("TEST_SEQ")
+        reader.create(name)
+        val code = """
+            TRIGGER G1 ON
+            ---
+            SET OUT1 ON
+        """.trimIndent()
+        reader.update(name, code)
+        val list = reader.readDirectory()
+        assertThat(list).hasSize(1)
+        val sequence = list[0]
+        assertThat(sequence.lines).`as`(sequence.toString()).hasSize(3)
+
+        assertThat(sequence.lines.map { it.raw }.joinToString(separator = "\n")).isEqualTo(code)
+    }
 
     @Test
     fun readSetOn() {

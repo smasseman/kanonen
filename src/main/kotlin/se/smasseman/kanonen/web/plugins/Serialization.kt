@@ -11,6 +11,7 @@ import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
 import se.smasseman.kanonen.core.*
 import se.smasseman.kanonen.web.KanonenState
+import java.util.*
 
 fun Application.configureSerialization(kanonenState: KanonenState) {
     install(ContentNegotiation) {
@@ -79,16 +80,18 @@ data class SequenceUpdate(val code: String)
 
 data class SequenceDto(val name: String, val lines: List<LineDto>) {
     companion object {
-        fun toDto(sequence: Sequence): SequenceDto = SequenceDto(
-            sequence.name.name,
-            sequence.actionLines.map { LineDto.toDto(it) }.toList()
-        )
+        fun toDto(sequence: Sequence): SequenceDto {
+            return SequenceDto(
+                sequence.name.name,
+                sequence.lines.map { LineDto.toDto(it) }.toList()
+            )
+        }
     }
 }
 
 data class LineDto(val lineNumber: Int, val raw: String) {
     companion object {
-        fun toDto(line: SequenceActionLine): LineDto = LineDto(
+        fun toDto(line: SequenceLine): LineDto = LineDto(
             line.lineNumber,
             line.raw
         )

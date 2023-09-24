@@ -10,7 +10,7 @@ import java.util.*
 class SequenceReader(private val directory: File) : LogUtil {
 
     init {
-        require (directory.isDirectory) {
+        require(directory.isDirectory) {
             throw IllegalArgumentException("$directory is not a directory")
         }
     }
@@ -40,8 +40,7 @@ class SequenceReader(private val directory: File) : LogUtil {
             logger().info("Load sequence $name")
             val scanner = Scanner(input)
 
-            val propertyLines = LinkedList<SequencePropertyLine>()
-            val actionLines = LinkedList<SequenceActionLine>()
+            val lines = LinkedList<SequenceLine>()
             var actionFlag = !input.contains("---")
             var lineNumber = 0
             while (scanner.hasNext()) {
@@ -49,31 +48,25 @@ class SequenceReader(private val directory: File) : LogUtil {
                 val line = scanner.nextLine().trim()
                 logger().debug("Parse line ${lineNumber}: $line")
                 try {
-                    if (line.startsWith("#")) {
-                        // Ignore comment
-                    } else if (line.isBlank()) {
-                        // Ignore blank line
-                    } else if (line.contains("---")) {
-                        actionFlag = true;
-                    } else {
-                        if (actionFlag) {
-                            val action = parseAction(line)
-                            val sequenceLine = SequenceActionLine(name, lineNumber, action, line)
-                            logger().debug("SequenceLine: $sequenceLine")
-                            actionLines.add(sequenceLine)
-                        } else {
-                            val property = parseProperty(line)
-                            val sequenceLine = SequencePropertyLine(name, lineNumber, property, line)
-                            logger().debug("SequenceLine: $sequenceLine")
-                            propertyLines.add(sequenceLine)
+                    val x: SequenceLine = when {
+                        (line.startsWith("#")) -> SequenceNoopLine(name, lineNumber, line)
+                        (line.isBlank()) -> SequenceNoopLine(name, lineNumber, line)
+                        (line.contains("---")) -> {
+                            actionFlag = true;
+                            SequenceNoopLine(name, lineNumber, line)
                         }
+
+                        (actionFlag) -> SequenceActionLine(name, lineNumber, parseAction(line), line)
+                        else -> SequencePropertyLine(name, lineNumber, parseProperty(line), line)
                     }
+                    logger().debug("SequenceLine: $x")
+                    lines.add(x)
                 } catch (e: Exception) {
                     throw SequenceSyntaxErrorException("Error in sequence $name at line $lineNumber: '$line' Error message: ${e.message}")
                         .initCause(e)
                 }
             }
-            return Sequence(name, propertyLines, actionLines)
+            return Sequence(name, lines)
         }
 
         private fun parseProperty(line: String): Property {
