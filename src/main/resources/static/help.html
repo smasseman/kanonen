@@ -8,6 +8,26 @@
 
 I exemplen nedan är FOO namnet på en output och BAR är namnet på en input.
 
+<h1>Property</h1>
+<table>
+  <tr>
+    <th>
+      Namn
+    </th>
+    <th>
+      Beskrivning
+    </th>
+    <th>
+      Exempel
+    </th>
+  </tr>
+  <tr>
+    <td>TRIGGER</td>
+    <td>Startar sekvensen när input går till angivet värde.</td>
+    <td>TRIGGER BAR ON</td>
+  </tr>
+</table>
+
 <h1>Kommandon</h1>
 <table>
   <tr>
@@ -57,6 +77,8 @@ I exemplen nedan är FOO namnet på en output och BAR är namnet på en input.
 <h1>Exempel sekvenser</h1>
 Nedan finns 2 sekvenser, kallade SEQ_1 och SEQ_2. När sekvens 1 startas så händer följande.
 
+<li>Om input BAR blir ON så startas sekvensen.</li>
+<li>--- skiljer sekvensens properties från de kommandon ska utföras av sekvensen.</li>
 <li>Vi börjar med att förvänta oss att output FOO ska vara på, annars avbryts körningen direkt.</li>
 <li>Sen sätter den FOO till av.</li>
 <li>Väntar en halv sekund</li>
@@ -68,6 +90,8 @@ Nedan finns 2 sekvenser, kallade SEQ_1 och SEQ_2. När sekvens 1 startas så hä
 <br><br>
 <b>SEQ_1</b>
 <pre>
+  TRIGGER BAR ON
+  ---
   EXPECT FOO ON
   SET FOO OFF
   WAIT 500
