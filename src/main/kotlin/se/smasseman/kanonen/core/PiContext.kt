@@ -74,8 +74,8 @@ class PiContext : LogUtil {
                 if (path.exists()) {
                     val content = Files.readString(path).trim()
                     when (content) {
-                        "1" -> input.mockState(DigitalState.HIGH)
-                        "0" -> input.mockState(DigitalState.LOW)
+                        "OFF" -> input.mockState(DigitalState.HIGH)
+                        "ON" -> input.mockState(DigitalState.LOW)
                     }
                 }
             }

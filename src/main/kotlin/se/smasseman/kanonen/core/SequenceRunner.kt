@@ -15,9 +15,18 @@ class SequenceRunner(
     private val errorListeners = LinkedList<ExecutionErrorListener>()
     private val executionListeners = LinkedList<ExecutionListener>()
     private val doneListeners = LinkedList<DoneListener>()
+    private var runningThread: Thread? = null
 
     fun run(sequenceName: SequenceName) {
-        run(sequences.get(sequenceName).actionLines[0])
+        if (runningThread != null) {
+            throw IllegalStateException("A sequence is already running.")
+        }
+        runningThread = Thread.currentThread()
+        try {
+            run(sequences.get(sequenceName).actionLines[0])
+        } finally {
+            runningThread = null
+        }
     }
 
     private fun run(input: SequenceActionLine) {

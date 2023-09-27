@@ -1,8 +1,8 @@
 package se.smasseman.kanonen.core
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.Test
-
 
 class SequenceRunnerTest {
 
@@ -26,22 +26,23 @@ class SequenceRunnerTest {
         assertThat(output1.get()).isEqualTo(OutputState.ON)
     }
 
-    //@Test(timeout = 1000)
+    @Test
     fun testOnlyOneRunning() {
         output1.set(OutputState.ON)
         val seq = SequenceReader.read(
             sequenceName1, """
-            LABEL START
             WAIT 500
-            SET ${output1.name} OFF
-            GOTO S1 START
-        """.trimIndent()
+         """.trimIndent()
         )
         val sequences = SequenceProvider.from(listOf(seq))
         val unit = SequenceRunner(outputs, inputs, sequences)
-        unit.run(sequenceName1)
-        while( output1.get() == OutputState.ON) {
-            Thread.sleep(10);
-        }
+        var counter = 0
+        unit.addDoneListener { counter++ }
+        Thread { unit.run(sequenceName1) }.start()
+        val x: Class<IllegalStateException> = IllegalStateException().javaClass
+        assertThatCode { unit.run(sequenceName1) }.isInstanceOf(x)
+        Thread.sleep(500)
+        assertThat(counter).isEqualTo(1)
+
     }
 }

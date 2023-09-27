@@ -19,6 +19,7 @@ open class Input(val name: InputName) {
         listeners.remove(listener)
     }
 
+    override fun toString() = name.name
 }
 
 fun interface InputListener {

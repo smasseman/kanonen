@@ -13,6 +13,7 @@ object KanonenState {
 
     val pinConfig = PinConfig()
     val triggerHandler : TriggerHandler
+    val abortHandler : AbortHandler
     private var reader: SequenceReader =
         SequenceReader(
             File(
@@ -28,6 +29,7 @@ object KanonenState {
         set(s) {
             field = s
             triggerHandler.update(s)
+            abortHandler.update(s)
         }
 
 
@@ -40,6 +42,7 @@ object KanonenState {
         runner =
             SequenceRunner(pinConfig.outputs, pinConfig.inputs, sequenceProvider)
         triggerHandler = TriggerHandler(runner, pinConfig.inputs)
+        abortHandler = AbortHandler(runner, pinConfig.inputs)
         sequences = reader.readDirectory()
     }
 

@@ -1,6 +1,7 @@
 package se.smasseman.kanonen.core
 
 import java.util.*
+import kotlin.concurrent.thread
 
 class TriggerHandler(val runner: SequenceRunner, val inputs: Map<InputName, Input>) {
 
@@ -19,7 +20,9 @@ class TriggerHandler(val runner: SequenceRunner, val inputs: Map<InputName, Inpu
                             ?: throw IllegalStateException("Can not create trigger for input $triggerInputName because it does not exist")
                         val listener = fun(_: InputName, state: InputState) {
                             if (triggerState == state) {
-                                runner.run(sequence.name)
+                                thread {
+                                    runner.run(sequence.name)
+                                }
                             }
                         }
                         input.addListener(listener)

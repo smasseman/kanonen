@@ -75,8 +75,13 @@ class SequenceReader(private val directory: File) : LogUtil {
                 val scanner = Scanner(line).useDelimiter(" ")
                 scanner.next()
                 return TriggerProperty(InputName(scanner.next()), InputState.valueOf(scanner.next()))
+            } else if (line.startsWith("ABORT")) {
+                //ABORT G3 OFF
+                val scanner = Scanner(line).useDelimiter(" ")
+                scanner.next()
+                return AbortProperty(InputName(scanner.next()), InputState.valueOf(scanner.next()))
             } else {
-                throw RuntimeException("Invalid property " + line);
+                throw RuntimeException("Invalid property $line");
             }
         }
 

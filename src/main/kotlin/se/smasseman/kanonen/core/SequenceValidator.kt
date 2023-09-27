@@ -30,6 +30,7 @@ class SequenceValidator {
                 sequence.propertyLines.forEach { line ->
                     when (line.property) {
                         is TriggerProperty -> validateTrigger(inputNames, line.property, line)
+                        is AbortProperty -> validateAbort(inputNames, line.property, line)
                     }
                 }
             }
@@ -61,6 +62,16 @@ class SequenceValidator {
         private fun validateTrigger(
             inputs: Collection<InputName>,
             property: TriggerProperty,
+            line: SequenceLine
+        ) {
+            if (!inputs.contains(property.input)) {
+                throw ValidationFailedException("Error on line ${line.lineNumber} in sequence ${line.sequenceName} input ${property.input} is an unknown input. Valid inputs $inputs")
+            }
+        }
+
+        private fun validateAbort(
+            inputs: Collection<InputName>,
+            property: AbortProperty,
             line: SequenceLine
         ) {
             if (!inputs.contains(property.input)) {
