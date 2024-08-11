@@ -6,4 +6,4 @@ cd /home/kanonen/kanonen
   -Dsequences=sequences \
   -Dlogback.configurationFile=src/main/resources/logback-file.xml \
   -cp build/libs/com.example.ktor-sample-0.0.1.jar:$(find build/install | tr '\n' ':') \
-  se.smasseman.kanonen.web.ApplicationKt
+  se.smasseman.kanonen.web.ApplicationKt &
