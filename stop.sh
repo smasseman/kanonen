@@ -1,0 +1,1 @@
+ps aux | grep kanonen-0.0.1.jar | awk '{print $2}' | xargs kill
