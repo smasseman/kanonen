@@ -12,10 +12,10 @@ import java.io.File
 object KanonenState {
 
     val pinConfig = PinConfig()
-    val triggerHandler : TriggerHandler
-    val abortHandler : AbortHandler
-    private var reader: SequenceReader =
-        SequenceReader(
+    val triggerHandler: TriggerHandler
+    val abortHandler: AbortHandler
+    private var reader: SequenceDirectoryReader =
+        SequenceDirectoryReader(
             File(
                 System.getProperty(
                     "sequences",
@@ -66,11 +66,11 @@ object KanonenState {
     }
 
     fun validateSequences() {
-        SequenceValidator.validate(
+        SequenceValidator(
             pinConfig.outputs.keys,
             pinConfig.inputs.keys,
             sequences
-        )
+        ).validate()
     }
 }
 

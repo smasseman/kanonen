@@ -7,7 +7,7 @@ import java.time.Duration
 import java.util.*
 
 
-class SequenceReaderTest {
+class SequenceDirectoryReaderTest {
 
     @Test
     fun readWrite() {
@@ -17,7 +17,7 @@ class SequenceReaderTest {
         }
         directory.mkdir()
 
-        val reader = SequenceReader(directory)
+        val reader = SequenceDirectoryReader(directory)
 
         val name = SequenceName("TEST_SEQ")
         reader.create(name)
@@ -60,9 +60,21 @@ class SequenceReaderTest {
     }
 
     @Test
-    fun readGoto() {
+    fun `test read GOTO with sequence name`() {
         val expected = GotoAction(SequenceName("S1"), "TheLabel")
         assertAction(expected, "GOTO S1 TheLabel")
+    }
+
+    @Test
+    fun `test read GOTO without sequence name`() {
+        val expected = GotoAction(SequenceName("THE_SEQ_NAME"), "TheLabel")
+        assertAction(expected, "GOTO TheLabel")
+    }
+
+    @Test
+    fun readIfInput() {
+        val expected = IfInputAction(InputName("IN1"), InputState.OFF, GotoAction(SequenceName("THE_SEQ"), "TheLabel"))
+        assertAction(expected, "IF INPUT IN1 OFF GOTO THE_SEQ TheLabel")
     }
 
     @Test
@@ -123,5 +135,5 @@ class SequenceReaderTest {
         assertThat(read).isEqualTo(expected)
     }
 
-    private fun read(code: String) = SequenceReader.read(SequenceName("THE_SEQ_NAME"), code)
+    private fun read(code: String) = SequenceReader(SequenceName("THE_SEQ_NAME")).read(code)
 }

@@ -33,25 +33,13 @@ class SequenceRunner(
         val sequenceName = input.sequenceName
         val sequence = sequences.get(sequenceName)
         val iter = getIterator(input, sequence)
-        log.info("Going to run ${sequence.actionLines.size} lines in ${sequence.name}")
         while (iter.hasNext() && !Thread.interrupted()) {
             val line = iter.next()
             val action = line.action
+            log.debug("In sequence: {} Run: {}", sequence.name, action)
+            executionListeners.forEach { it.execute(line) }
             try {
-                executionListeners.forEach { it.execute(line) }
-                when (action) {
-                    is SetAction -> executeSet(action)
-                    is ExpectAction -> executeExpect(action)
-                    is WaitForAction -> executeWaitFor(action)
-                    is GotoAction -> {
-                        run(action.sequenceName, action.labelName, action)
-                        return@run
-                    }
-
-                    is CallAction -> run(action.sequenceName, action.labelName, action)
-                    is LabelAction -> {}
-                    is WaitAction -> executeWait(action)
-                }
+                if (executeAction(action)) return@run
             } catch (e: InterruptedException) {
                 log.info("Interrupted")
                 Thread.currentThread().interrupt()
@@ -63,6 +51,40 @@ class SequenceRunner(
             }
         }
         doneListeners.forEach { it.done() }
+    }
+
+    private fun executeAction(action: Action): Boolean {
+        when (action) {
+            is SetAction -> executeSet(action)
+            is ExpectAction -> executeExpect(action)
+            is WaitForAction -> executeWaitFor(action)
+            is CallAction -> {
+                run(action.sequenceName, action.labelName, action)
+            }
+
+            is GotoAction -> {
+                run(action.sequenceName, action.labelName, action)
+                return true
+            }
+
+            is IfInputAction -> {
+                executeIfInput(action)
+                if (action.action is GotoAction) {
+                    return true
+                }
+            }
+
+            is IfOutputAction -> {
+                executeIfOutput(action)
+                if (action.action is GotoAction) {
+                    return true
+                }
+            }
+
+            is LabelAction -> {}
+            is WaitAction -> executeWait(action)
+        }
+        return false
     }
 
     private fun executeWaitFor(action: WaitForAction) {
@@ -108,7 +130,6 @@ class SequenceRunner(
         if (currentValue != expectedValue) {
             throw java.lang.RuntimeException("$outputName was expected to be $expectedValue but it was $currentValue")
         }
-
     }
 
     private fun executeSet(action: SetAction) {
@@ -117,6 +138,24 @@ class SequenceRunner(
         validate(outputName)
         outputs[outputName]!!.set(value)
         outputListeners.forEach { it.changed(outputName, value) }
+    }
+
+    private fun executeIfInput(action: IfInputAction) {
+        val inputName = action.input
+        val expectedValue = action.state
+        val currentValue = inputs[inputName]!!.state
+        if (currentValue == expectedValue) {
+            executeAction(action.action)
+        }
+    }
+
+    private fun executeIfOutput(action: IfOutputAction) {
+        val outputName = action.output
+        val expectedValue = action.state
+        val currentValue = outputs[outputName]!!.get()
+        if (currentValue == expectedValue) {
+            executeAction(action.action)
+        }
     }
 
     private fun validate(output: OutputName) {

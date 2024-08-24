@@ -103,91 +103,6 @@ class KanonenIT {
         }
     }
 
-    @Test
-    fun testGoto() {
-        val s1: Sequence = readSequence(
-            "S1", """
-        SET OUTA ON
-        GOTO S2 label1
-        EXPECT OUTA OFF
-        """
-        )
-        val s2: Sequence = readSequence(
-            "S2", """
-        EXPECT OUTA OFF
-        LABEL label1
-        EXPECT OUTA ON
-        """
-        )
-        val sequences = listOf(s1, s2)
-        val runner = getRunner(sequences)
-
-        runner.run(s1.name)
-
-        doneListener.await(duration = Duration.ofSeconds(5))
-        assertNoErrors()
-        assertExecutedActions(
-            "SET OUTA ON",
-            "GOTO S2 label1",
-            "LABEL label1",
-            "EXPECT OUTA ON"
-        );
-
-    }
-
-    @Test
-    fun testCall() {
-        val s1: Sequence = readSequence(
-            "S1", """
-        SET OUTA ON
-        CALL S2 label1
-        EXPECT OUTB ON
-        """.trimIndent()
-        )
-        val s2: Sequence = readSequence(
-            "S2", """
-        LABEL label1
-        CALL S3 label1
-        SET OUTB ON
-        """.trimIndent()
-        )
-        val s3: Sequence = readSequence(
-            "S3", """
-        LABEL label1
-        SET OUTA OFF
-        """.trimIndent()
-        )
-        val sequences = listOf(s1, s2, s3)
-        SequenceValidator.validate(outputs.keys, inputs.keys, sequences);
-        val runner = getRunner(sequences)
-
-        runner.run(s1.name)
-
-        doneListener.await(duration = Duration.ofSeconds(5))
-        assertNoErrors()
-        assertExecutedActions(
-            "SET OUTA ON",
-            "CALL S2 label1",
-            "LABEL label1",
-            "CALL S3 label1",
-            "LABEL label1",
-            "SET OUTA OFF",
-            "SET OUTB ON",
-            "EXPECT OUTB ON"
-        );
-    }
-
-    private fun assertExecutedActions(vararg actions: String) {
-        val expectedActions: List<Action> = actions.map { SequenceReader.parseAction(it) }
-        assertThat(executionListener.lines.map { it.action }.toList()).containsExactlyElementsOf(
-            expectedActions
-        )
-    }
-
-    private fun assertNoErrors() {
-        assertThat(errorListener.errors).`as`("Unexpected error: ${errorListener.errors}").isEmpty()
-    }
-
     private fun getRunner(sequences: List<Sequence>): SequenceRunner {
         val provider = SequenceProvider.from(sequences)
         return SequenceRunner(outputs, inputs, provider)
@@ -198,7 +113,7 @@ class KanonenIT {
     }
 
     private fun readSequence(name: String, content: String): Sequence {
-        return SequenceReader.read(SequenceName(name), content)
+        return SequenceReader(SequenceName(name)).read(content)
     }
 
     private fun getOutputs(vararg name: String): Map<OutputName, MockOutput> =

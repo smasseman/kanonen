@@ -7,31 +7,54 @@ class SequenceValidatorTest {
 
     @Test
     fun test_validTriggerSequence() {
-        val seq = SequenceReader.read(
-            SequenceName("SEQ1"), """
+        val seq = SequenceReader(SequenceName("SEQ1")).read(
+            """
             TRIGGER IN1 ON
             ---
             SET OUT1 ON
         """.trimIndent()
         )
-        SequenceValidator.validate(listOf(OutputName("OUT1")), listOf(InputName("IN1")), listOf(seq))
+        SequenceValidator(listOf(OutputName("OUT1")), listOf(InputName("IN1")), listOf(seq)).validate()
     }
 
     @Test
-    fun `test it explodes when trigger refere to unknow input`() {
-        val seq = SequenceReader.read(
-            SequenceName("SEQ1"), """
+    fun `test it explodes when trigger refer to unknown input`() {
+        val seq = SequenceReader(SequenceName("SEQ1")).read(
+            """
             TRIGGER IN2 ON
             ---
             SET OUT1 ON
         """.trimIndent()
         )
         assertThatThrownBy {
-            SequenceValidator.validate(
+            SequenceValidator(
                 listOf(OutputName("OUT1")),
                 listOf(InputName("IN1")),
                 listOf(seq)
-            )
-        }.hasMessageContaining("IN1")
+            ).validate()
+        }
+            .hasMessageContaining("IN1")
+            .hasMessageContaining("IN2")
+    }
+
+    @Test
+    fun `test when sequence have 2 labels with same name then it explodes`() {
+        val seq = SequenceReader(SequenceName("SEQ1")).read(
+            """
+            LABEL XXX
+            LABEL FOO
+            LABEL BAR
+            LABEL FOO
+        """.trimIndent()
+        )
+        assertThatThrownBy {
+            SequenceValidator(
+                listOf(),
+                listOf(),
+                listOf(seq)
+            ).validate()
+        }
+            .hasMessageContaining("SEQ1")
+            .hasMessageContaining("FOO")
     }
 }
